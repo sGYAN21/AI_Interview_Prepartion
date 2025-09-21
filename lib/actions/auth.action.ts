@@ -97,9 +97,8 @@ export async function signOut() {
 }
 
 // Get current user from session cookie
-export async function getCurrentUser(): Promise<User | null> {
+  export async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
-
   const sessionCookie = cookieStore.get("session")?.value;
   if (!sessionCookie) return null;
 
@@ -117,12 +116,12 @@ export async function getCurrentUser(): Promise<User | null> {
       ...userRecord.data(),
       id: userRecord.id,
     } as User;
-  } catch (error) {
-    console.log(error);
+       } catch (error:any) {
+          console.log(error.message);
 
     // Invalid or expired session
-    return null;
-  }
+     return null;
+     }
 }
 
 // Check if user is authenticated

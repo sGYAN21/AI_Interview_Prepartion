@@ -41,84 +41,89 @@ const AuthForm = ({ type }: { type: FormType }) => {
     },
   });
 
-const onSubmit = async (data: z.infer<typeof formSchema>) => {
-  try {
-    if (type === "sign-up") {
-      const { name, email, password } = data;
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    try {
+      if (type === "sign-up") {
+        const { name, email, password } = data;
 
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
 
-      const result = await signUp({
-        uid: userCredential.user.uid,
-        name: name!,
-        email,
-        password,
-      });
+        const result = await signUp({
+          uid: userCredential.user.uid,
+          name: name!,
+          email,
+          password,
+        });
 
-      if (!result.success) {
-        toast.error(result.message);
-        return;
+        if (!result.success) {
+          toast.error(result.message);
+          return;
+        }
+
+        toast.success("Account created successfully. Please sign in.");
+        router.push("/sign-in");
+      } else {
+        const { email, password } = data;
+
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+
+        const idToken = await userCredential.user.getIdToken();
+        if (!idToken) {
+          toast.error("Sign in Failed. Please try again.");
+          return;
+        }
+
+        await signIn({
+          email,
+          idToken,
+        });
+
+        toast.success("Signed in successfully.");
+        router.push("/");
       }
+    } catch (error: unknown) {
+      console.log("error",error);
 
-      toast.success("Account created successfully. Please sign in.");
-      router.push("/sign-in");
-    } else {
-      const { email, password } = data;
+      if (error instanceof FirebaseError) {
+        // Handle specific Firebase errors
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            toast.error("This email is already registered. Please sign in instead.");
+            router.push("/sign-in");
+            break;
+          case 'auth/invalid-email':
+            toast.error("Invalid email address format.");
+            break;
+          case 'auth/weak-password':
+            toast.error("Password should be at least 6 characters.");
+            break;
+          case "auth/user-not-found":
+          case "auth/invalid-credential":
+            toast.error("No account found with this email. Please sign up first.");
+            router.push("/sign-up");
+            break;
+          case 'auth/wrong-password':
+            toast.error("Invalid email or password.");
+            break;
 
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-      const idToken = await userCredential.user.getIdToken();
-      if (!idToken) {
-        toast.error("Sign in Failed. Please try again.");
-        return;
+          default:
+            toast.error(`There was an error: ${error.message}`);
+        }
+      } else if (error instanceof Error) {
+        toast.error(`There was an error: ${error.message}`);
+      } else {
+        toast.error("An unexpected error occurred");
       }
-
-      await signIn({
-        email,
-        idToken,
-      });
-
-      toast.success("Signed in successfully.");
-      router.push("/");
     }
-  } catch (error: unknown) {
-    console.log(error);
-    
-    if (error instanceof FirebaseError) {
-      // Handle specific Firebase errors
-      switch (error.code) {
-        case 'auth/email-already-in-use':
-          toast.error("This email is already registered. Please sign in instead.");
-          router.push("/sign-in");
-          break;
-        case 'auth/invalid-email':
-          toast.error("Invalid email address format.");
-          break;
-        case 'auth/weak-password':
-          toast.error("Password should be at least 6 characters.");
-          break;
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-          toast.error("Invalid email or password.");
-          break;
-        default:
-          toast.error(`There was an error: ${error.message}`);
-      }
-    } else if (error instanceof Error) {
-      toast.error(`There was an error: ${error.message}`);
-    } else {
-      toast.error("An unexpected error occurred");
-    }
-  }
-};
+  };
 
   const isSignIn = type === "sign-in";
 
