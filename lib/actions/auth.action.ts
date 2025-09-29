@@ -2,7 +2,6 @@
 
 import { auth, db } from "@/firebase/admin";
 import { cookies } from "next/headers";
-
 // Session duration (1 week)
 const SESSION_DURATION = 60 * 60 * 24 * 7;
 
@@ -97,7 +96,7 @@ export async function signOut() {
 }
 
 // Get current user from session cookie
-  export async function getCurrentUser(): Promise<User | null> {
+export async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("session")?.value;
   if (!sessionCookie) return null;
@@ -116,16 +115,45 @@ export async function signOut() {
       ...userRecord.data(),
       id: userRecord.id,
     } as User;
-       } catch (error:any) {
-          console.log(error.message);
+  } catch (error: any) {
+    console.log(error.message);
 
     // Invalid or expired session
-     return null;
-     }
+    return null;
+  }
 }
 
 // Check if user is authenticated
 export async function isAuthenticated() {
   const user = await getCurrentUser();
   return !!user;
+}
+export async function getInterviewsByUserId(userId: string): Promise<Interview[] | null> {
+  const interviews = await db.collection('interviews')
+    .where('userId', '==', userId)
+    .orderBy('createdAt', 'desc')
+    .get();
+
+  return interviews.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data()
+
+  })) as Interview[];
+}
+
+export async function getLatestInterviews(params: GetLatestInterviewsParams): Promise<Interview[] | null> {
+
+  const {userId,limit =20}=params;
+  const interviews = await db.collection('interviews')
+  .orderBy('createdAt', 'desc')
+    .where('finalized', '==', true)
+    .where('userId','!=', userId)
+    .limit(limit)
+    .get();
+
+  return interviews.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data()
+
+  })) as Interview[];
 }
