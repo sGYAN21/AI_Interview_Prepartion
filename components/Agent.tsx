@@ -4,7 +4,8 @@ import { cn } from "@/lib/utils";
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { vapi } from '@/lib/vapi.sdk'
-import {interviewer} from "@/constants";
+import { interviewer } from "@/constants";
+import { createFeedback } from '@/lib/actions/general.action';
 enum CallStatus {
   INACTIVE = "INACTIVE",
   ACTIVE = "ACTIVE",
@@ -15,7 +16,7 @@ interface SavedMessage {
   role: 'user' | 'system' | 'assistant';
   content: string;
 }
-const Agent = ({ userName, userId, type, questions }: AgentProps) => {
+const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) => {
   const router = useRouter();
 
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -70,11 +71,61 @@ const Agent = ({ userName, userId, type, questions }: AgentProps) => {
       vapi.off("error", onError);
     };
   }, []);
+
+  const handleGenerateFeedback = async (messages: SavedMessage[]) => {
+    console.log('Generate feedback here.');
+
+    //Todo: create a server action that generates feedback
+    const { success, feedbackId: id } = await createFeedback({
+      interviewId: interviewId!,
+      userId: userId!,
+      transcript: messages
+    })
+    if (success && id) {
+      router.push(`/interview/${interviewId}/feedback`);
+    } else {
+      console.log('Error saving feedback');
+      router.push('/')
+    }
+  }
   useEffect(() => {
-    if (callStatus === CallStatus.FINISHED) router.push('/')
+    if (callStatus === CallStatus.FINISHED) {
+      if (type === 'generate') {
+        router.push('/')
+      } else {
+        handleGenerateFeedback(messages);
+      }
+    }
+    // if (callStatus === CallStatus.FINISHED) router.push('/')
   }, [messages, callStatus, type, userId]);
 
-const handleCall = async () => {
+  // const handleCall = async () => {
+  //   setCallStatus(CallStatus.CONNECTING);
+
+  //   if (type === "generate") {
+  //     await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
+  //       variableValues: {
+  //         username: userName,
+  //         userid: userId,
+  //       },
+  //     });
+  //   } else {
+  //     let formattedQuestions = "";
+  //     if (questions) {
+  //       formattedQuestions = questions
+  //         .map((question) => `- ${question}`)
+  //         .join("\n");
+  //     }
+
+  //     await vapi.start(interviewer, {
+  //       variableValues: {
+  //         questions: formattedQuestions,
+  //       },
+  //     });
+  //   }
+  // };
+  
+ const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
 
     if (type === "generate") {
@@ -98,11 +149,11 @@ const handleCall = async () => {
           .join("\n");
       }
 
-      await vapi.start(interviewer, {
-        variableValues: {
-          questions: formattedQuestions,
-        },
-      });
+      // await vapi.start(interviewer, {
+      //   variableValues: {
+      //     questions: formattedQuestions,
+      //   },
+      // });
     }
   };
   const handleDisconnect = async () => {
@@ -110,7 +161,7 @@ const handleCall = async () => {
     vapi.stop();
 
   }
-  const latestMessage = messages[messages.length-1]?.content;
+  const latestMessage = messages[messages.length - 1]?.content;
   const isCallInactiveOrFinished = callStatus === CallStatus.INACTIVE || callStatus === CallStatus.FINISHED;
   return (
     <>

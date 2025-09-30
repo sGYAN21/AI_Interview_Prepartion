@@ -2,9 +2,9 @@ import React from 'react'
 import Link from 'next/link';
 import { Button } from '@/components/ui/button'
 import Image from 'next/image';
-import { dummyInterviews } from '@/constants';
 import InterviewCard from '@/components/InterviewCard';
-import { getInterviewsByUserId, getCurrentUser, getLatestInterviews } from '@/lib/actions/auth.action';
+import { getInterviewsByUserId, getLatestInterviews } from '@/lib/actions/general.action';
+import { getCurrentUser } from '@/lib/actions/auth.action';
 const page = async () => {
   const user = await getCurrentUser();
 
@@ -13,8 +13,11 @@ const page = async () => {
     await getLatestInterviews({ userId: user?.id! })
   ]);
 
-  const hasPastInterviews = userInterviews?.length > 0;
-  const hasUpcomingInterviews = latestInterviews?.length > 0;
+  // const hasPastInterviews = userInterviews?.length > 0;
+  // const hasUpcomingInterviews = latestInterviews?.length > 0;
+  const hasPastInterviews = (userInterviews?.length ?? 0) > 0;
+const hasUpcomingInterviews = (latestInterviews?.length ?? 0) > 0;
+
   return (
     <>
       <section className='card-cta'>
@@ -41,7 +44,7 @@ const page = async () => {
                 <InterviewCard {...interview} key={interview.id} />
               ))
             ) : (
-              <p>You haven &apos; taken any inteviews yet</p>
+              <p>You haven&apos; taken any inteviews yet</p>
             )
           }
         </div>
