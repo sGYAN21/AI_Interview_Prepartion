@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { vapi } from '@/lib/vapi.sdk'
 import { interviewer } from "@/constants";
 import { createFeedback } from '@/lib/actions/general.action';
+
 enum CallStatus {
   INACTIVE = "INACTIVE",
   ACTIVE = "ACTIVE",
@@ -99,31 +100,6 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
     // if (callStatus === CallStatus.FINISHED) router.push('/')
   }, [messages, callStatus, type, userId]);
 
-  // const handleCall = async () => {
-  //   setCallStatus(CallStatus.CONNECTING);
-
-  //   if (type === "generate") {
-  //     await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
-  //       variableValues: {
-  //         username: userName,
-  //         userid: userId,
-  //       },
-  //     });
-  //   } else {
-  //     let formattedQuestions = "";
-  //     if (questions) {
-  //       formattedQuestions = questions
-  //         .map((question) => `- ${question}`)
-  //         .join("\n");
-  //     }
-
-  //     await vapi.start(interviewer, {
-  //       variableValues: {
-  //         questions: formattedQuestions,
-  //       },
-  //     });
-  //   }
-  // };
   
  const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
