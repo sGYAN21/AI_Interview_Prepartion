@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { vapi } from '@/lib/vapi.sdk'
-import { interviewer } from "@/constants";
 import { createFeedback } from '@/lib/actions/general.action';
 
 enum CallStatus {
@@ -104,32 +103,45 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
  const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
 
-    if (type === "generate") {
-      await vapi.start(
-        undefined,
-        undefined,
-        undefined,
-        process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!,
-        {
-          variableValues: {
-            username: userName,
-            userid: userId,
-          },
+    try {
+      if (type === "generate") {
+        await vapi.start(
+          undefined,
+          undefined,
+          undefined,
+          process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!,
+          {
+            variableValues: {
+              username: userName,
+              userid: userId,
+            },
+          }
+        );
+      } else {
+        let formattedQuestions = "";
+        if (questions) {
+          formattedQuestions = questions
+            .map((question) => `- ${question}`)
+            .join("\n");
         }
-      );
-    } else {
-      let formattedQuestions = "";
-      if (questions) {
-        formattedQuestions = questions
-          .map((question) => `- ${question}`)
-          .join("\n");
-      }
 
-      // await vapi.start(interviewer, {
-      //   variableValues: {
-      //     questions: formattedQuestions,
-      //   },
-      // });
+        await vapi.start(
+          undefined,
+          undefined,
+          undefined,
+          process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!,
+          {
+            variableValues: {
+              questions: formattedQuestions,
+            },
+          }
+        );
+      }
+      setCallStatus(CallStatus.ACTIVE);
+    } catch (error) {
+      console.error("Failed to connect to Vapi:", error);
+      setCallStatus(CallStatus.INACTIVE);
+      alert("Failed to start the interview. Please check your Vapi configuration.");
     }
   };
   const handleDisconnect = async () => {
