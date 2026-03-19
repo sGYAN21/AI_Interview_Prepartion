@@ -11,7 +11,6 @@ const InterviewCard = async({ id, userId, role, type, techstack, createdAt }: In
     const formattedDate = dayjs(feedback?.createdAt || createdAt || Date.now()).format("DD MMM, YYYY");
 
     //technical
-
     return (
         <div className='card-border w-[360px] max-sm:w-full min-h-96'>
 
@@ -52,5 +51,6 @@ const InterviewCard = async({ id, userId, role, type, techstack, createdAt }: In
         </div>
     )
 }
+
 
 export default InterviewCard
