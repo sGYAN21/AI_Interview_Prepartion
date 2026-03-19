@@ -122,7 +122,6 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
           .map((question) => `- ${question}`)
           .join("\n");
       }
-
       // await vapi.start(interviewer, {
       //   variableValues: {
       //     questions: formattedQuestions,
