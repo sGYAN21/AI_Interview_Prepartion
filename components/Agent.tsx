@@ -39,7 +39,6 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
         setMessages((prev) => [...prev, newMessage]);
       }
     };
-
     const onSpeechStart = () => {
       console.log("speech start");
       setIsSpeaking(true);
